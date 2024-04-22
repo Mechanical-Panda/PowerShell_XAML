@@ -41,15 +41,15 @@ catch{#if it broke some other way :D
 # Store Form Objects In PowerShell
 #===========================================================================
 
-$xaml.SelectNodes("//*[@Name]") | %{Set-Variable -Name "WPF$($_.Name)" -Value $Form.FindName($_.Name)}
+$xaml.SelectNodes("//*[@Name]") | %{Set-Variable -Name "WPF_$($_.Name)" -Value $Form.FindName($_.Name)}
 
 Function Get-FormVariables{
 if ($global:ReadmeDisplay -ne $true){Write-host "If you need to reference this display again, run Get-FormVariables" -ForegroundColor Yellow;$global:ReadmeDisplay=$true}
 write-host "Found the following interactable elements from our form" -ForegroundColor Cyan
-get-variable WPF*
+get-variable WPF_*
 }
 
-Get-FormVariables
+Get-FormVariables #| Export-Csv -Encoding UTF8 -Path "C:\temp\Formvariables.csv"
 
 #===========================================================================
 # Use this space to add code to the various form elements in your GUI
@@ -70,7 +70,15 @@ Get-FormVariables
 #===========================================================================
 # Shows the form
 #===========================================================================
-write-host "To show the form, run the following" -ForegroundColor Cyan
-'$Form.ShowDialog() | out-null'
+#write-host "To show the form, run the following" -ForegroundColor Cyan
+#'$Form.ShowDialog() | out-null'
+
+$async = $Form.Dispatcher.InvokeAsync({
+    Remove-Variable * -ErrorAction SilentlyContinue 
+    Remove-Module * 
+    $error.Clear()
+    $Form.ShowDialog() | Out-Null
+})
+$async.Wait() | Out-Null
 
 
